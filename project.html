@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Professional Color & Shadow Studio</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="project.css" />
+  </head>
+  <body data-theme="dark-blue">
+    <!-- Header with Settings and Tab Navigation -->
+    <div class="header-container">
+      <div class="tab-navigation">
+        <button class="tab-btn active" onclick="switchTab('color-picker')">
+          <i class="fas fa-palette"></i> Color Picker
+        </button>
+        <button class="tab-btn" onclick="switchTab('shadow-effects')">
+          <i class="fas fa-magic"></i> Shadow Effects
+        </button>
+      </div>
+      <svg
+        id="settings-icon-svg"
+        onclick="toggleSettingsPanel(event)"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style="
+          width: 2rem;
+          height: 2rem;
+          cursor: pointer;
+          color: var(--heading-color);
+          transition: color 0.2s;
+          line-height: 1;
+        "
+      >
+        <path
+          fill-rule="evenodd"
+          d="M3 6.75A.75.75 0 013.75 6h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 6.75zM3 12a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 12zm0 5.25a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel">
+      <div class="setting-group">
+        <label>Select Theme</label>
+        <div class="setting-theme-selector">
+          <div class="theme-option">
+            <label>
+              <input
+                type="radio"
+                name="theme"
+                value="dark-blue"
+                checked
+                onclick="setTheme('dark-blue')"
+              />
+              Dark Blue (Current)
+            </label>
+            <div class="accent-color-controls">
+              <input
+                type="color"
+                id="dark-blue-accent-picker"
+                class="theme-color-picker"
+                value="#3182ce"
+                data-theme-id="dark-blue"
+                onchange="
+                  updateAccentColor(
+                    this.getAttribute('data-theme-id'),
+                    this.value,
+                    'picker',
+                  )
+                "
+              />
+              <input
+                type="text"
+                id="dark-blue-accent-hex"
+                class="theme-hex-input"
+                value="#3182CE"
+                data-theme-id="dark-blue"
+                oninput="handleAccentHexInput(this)"
+              />
+            </div>
+          </div>
+          <div class="theme-option">
+            <label>
+              <input
+                type="radio"
+                name="theme"
+                value="black"
+                onclick="setTheme('black')"
+              />
+              Black (AMOLED)
+            </label>
+            <div class="accent-color-controls">
+              <input
+                type="color"
+                id="black-accent-picker"
+                class="theme-color-picker"
+                value="#90caf9"
+                data-theme-id="black"
+                onchange="
+                  updateAccentColor(
+                    this.getAttribute('data-theme-id'),
+                    this.value,
+                    'picker',
+                  )
+                "
+              />
+              <input
+                type="text"
+                id="black-accent-hex"
+                class="theme-hex-input"
+                value="#90CAF9"
+                data-theme-id="black"
+                oninput="handleAccentHexInput(this)"
+              />
+            </div>
+          </div>
+          <div class="theme-option">
+            <label>
+              <input
+                type="radio"
+                name="theme"
+                value="white"
+                onclick="setTheme('white')"
+              />
+              White (Light)
+            </label>
+            <div class="accent-color-controls">
+              <input
+                type="color"
+                id="white-accent-picker"
+                class="theme-color-picker"
+                value="#0d47a1"
+                data-theme-id="white"
+                onchange="
+                  updateAccentColor(
+                    this.getAttribute('data-theme-id'),
+                    this.value,
+                    'picker',
+                  )
+                "
+              />
+              <input
+                type="text"
+                id="white-accent-hex"
+                class="theme-hex-input"
+                value="#0D47A1"
+                data-theme-id="white"
+                oninput="handleAccentHexInput(this)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLOR PICKER TAB CONTENT -->
+    <div id="color-picker-tab" class="tab-content active">
+      <div class="color-picker-container">
+        <div class="color-wheel-area">
+          <h2>Color Selector</h2>
+
+          <div class="color-selector-wrapper">
+            <div class="color-square-wrapper" id="color-square-wrapper">
+              <canvas id="color-square"></canvas>
+              <div
+                class="color-selector-indicator"
+                id="color-selector-indicator"
+              ></div>
+            </div>
+            <div class="hue-strip-wrapper" id="hue-strip-wrapper">
+              <div id="hue-strip"></div>
+              <div class="hue-indicator" id="hue-indicator"></div>
+            </div>
+          </div>
+
+          <div class="color-preview" id="color-preview"></div>
+
+          <p style="font-size: 0.85rem; opacity: 0.7; text-align: center">
+            Adjust the hue strip and the color square to select a color.
+          </p>
+        </div>
+
+        <div class="color-info-area">
+          <h2>Color Codes</h2>
+
+          <div class="input-group">
+            <label for="color-format-select"
+              >Select Format to View & Copy</label
+            >
+            <select id="color-format-select" onchange="updateSelectedOutput()">
+              <option value="hexa">HEXA (e.g., #4299E1FF)</option>
+              <option value="hex">HEX (e.g., #4299E1)</option>
+              <option value="rgba">RGBA</option>
+              <option value="rgb">RGB</option>
+              <option value="hsla">HSLA</option>
+              <option value="hsl">HSL</option>
+              <option value="hwb">HWB</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="manual-color-input">Enter Color Code</label>
+            <input
+              type="text"
+              id="manual-color-input"
+              placeholder="#ff0000, rgb(255,0,0), hsl(0,100%,50%)"
+            />
+          </div>
+
+          <div class="input-group">
+            <label>Current Value</label>
+            <div class="color-output">
+              <input type="text" id="selected-output" readonly />
+              <button class="copy-btn" onclick="copyToClipboard('selected')">
+                Copy Code
+              </button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="alpha-slider"
+              >Opacity (Alpha):
+              <span id="alpha-value-display">1.00</span></label
+            >
+            <input
+              type="range"
+              id="alpha-slider"
+              min="0"
+              max="1"
+              step="0.01"
+              value="1"
+              oninput="handleAlphaChange(this.value)"
+            />
+          </div>
+
+          <div class="hidden-inputs">
+            <input
+              type="text"
+              id="hex-input"
+              oninput="handleManualInput('hex')"
+            />
+            <input
+              type="text"
+              id="hexa-input"
+              oninput="handleManualInput('hexa')"
+            />
+            <input
+              type="text"
+              id="rgb-input"
+              oninput="handleManualInput('rgb')"
+            />
+            <input
+              type="text"
+              id="rgba-input"
+              oninput="handleManualInput('rgba')"
+            />
+            <input type="text" id="hsl-output" readonly />
+            <input type="text" id="hsla-output" readonly />
+            <input type="text" id="hwb-output" readonly />
+          </div>
+
+          <div style="margin-top: 30px">
+            <label>Add current color to gradient stop:</label>
+            <div style="display: flex; gap: 10px">
+              <button class="copy-btn" onclick="setGradientStop(1)">
+                Set Stop 1
+              </button>
+              <button class="copy-btn" onclick="setGradientStop(2)">
+                Set Stop 2
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="gradient-area">
+          <h2>Gradient Builder</h2>
+
+          <div class="gradient-controls">
+            <div class="input-group" style="flex: 1 1 40%">
+              <label>Color Stop 1</label>
+              <div class="gradient-color-stop">
+                <div id="stop-preview-1" class="gradient-stop-preview"></div>
+                <input
+                  type="text"
+                  id="gradient-stop-1"
+                  value="rgba(66, 153, 225, 1.00)"
+                  readonly
+                  style="flex-grow: 1"
+                />
+                <input
+                  type="text"
+                  id="gradient-pos-1"
+                  value="0%"
+                  oninput="updateGradientPreview()"
+                  style="width: 50px; text-align: center; flex-grow: 0"
+                />
+              </div>
+              <label style="margin-top: 10px">Color Stop 2</label>
+              <div class="gradient-color-stop">
+                <div id="stop-preview-2" class="gradient-stop-preview"></div>
+                <input
+                  type="text"
+                  id="gradient-stop-2"
+                  value="rgba(255, 0, 0, 1.00)"
+                  readonly
+                  style="flex-grow: 1"
+                />
+                <input
+                  type="text"
+                  id="gradient-pos-2"
+                  value="100%"
+                  oninput="updateGradientPreview()"
+                  style="width: 50px; text-align: center; flex-grow: 0"
+                />
+              </div>
+            </div>
+
+            <div class="input-group" style="flex: 1 1 25%">
+              <label for="gradient-type">Type</label>
+              <select id="gradient-type" onchange="updateGradientPreview()">
+                <option value="linear">Linear</option>
+                <option value="radial">Radial</option>
+                <option value="repeating-linear">Repeating Linear</option>
+                <option value="repeating-radial">Repeating Radial</option>
+              </select>
+            </div>
+
+            <div class="input-group" style="flex: 1 1 25%">
+              <label for="gradient-param">Angle / Position</label>
+              <input
+                type="text"
+                id="gradient-param"
+                value="90deg"
+                oninput="updateGradientPreview()"
+              />
+            </div>
+          </div>
+
+          <label>CSS Gradient Preview</label>
+          <div id="gradient-preview-box" class="gradient-preview-box"></div>
+
+          <label for="gradient-output">CSS Code</label>
+          <div class="color-output">
+            <input type="text" id="gradient-output" readonly />
+            <button class="copy-btn" onclick="copyToClipboard('gradient')">
+              Copy CSS
+            </button>
+          </div>
+        </div>
+
+        <div class="copy-feedback" id="copy-feedback">Copied to clipboard!</div>
+
+        <div
+          class="history-area"
+          style="flex: 1 1 100%; max-width: 900px; margin-top: 20px"
+        >
+          <h2>Color History</h2>
+          <div
+            id="color-history-swatches"
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 10px;
+              padding: 10px;
+              border: 1px solid var(--border-color);
+              border-radius: 6px;
+            "
+          ></div>
+          <button
+            class="copy-btn"
+            onclick="clearHistory()"
+            style="
+              margin-top: 15px;
+              background-color: #e53e3e;
+              margin-left: 10px;
+            "
+          >
+            Clear History
+          </button>
+          <button
+            class="copy-btn"
+            onclick="downloadHistory()"
+            style="
+              margin-top: 15px;
+              background-color: var(--accent-color);
+              margin-left: 10px;
+            "
+          >
+            Download History (HTML)
+          </button>
+          <button
+            class="copy-btn"
+            onclick="document.getElementById('upload-history-input').click()"
+            style="
+              margin-top: 15px;
+              background-color: var(--accent-color);
+              margin-left: 10px;
+            "
+          >
+            Upload History
+          </button>
+          <input
+            type="file"
+            id="upload-history-input"
+            accept=".html"
+            style="display: none"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- SHADOW EFFECTS TAB CONTENT -->
+    <div id="shadow-effects-tab" class="tab-content">
+      <div class="shadow-container">
+        <!-- Preview Area -->
+        <div class="shadow-preview-area">
+          <h2>Live Preview</h2>
+          <div class="shadow-preview-box-wrapper">
+            <div
+              id="preview-box"
+              class="shadow-preview-box"
+              style="background-color: #a3e635"
+            >
+              <span
+                id="preview-text"
+                class="shadow-preview-text"
+                style="color: #0a0a0a"
+                >Shadow</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Area -->
+        <div class="shadow-controls-area">
+          <h2>Shadow Controls</h2>
+
+          <!-- Color Pickers Section -->
+          <div class="shadow-colors-section">
+            <div class="shadow-color-group">
+              <label class="shadow-label">UI Colors</label>
+              <div class="shadow-color-inputs">
+                <div class="shadow-color-item">
+                  <span>Box Color</span>
+                  <input
+                    type="color"
+                    id="box-color"
+                    value="#a3e635"
+                    class="shadow-color-picker"
+                  />
+                </div>
+                <div class="shadow-color-item">
+                  <span>Text Color</span>
+                  <input
+                    type="color"
+                    id="text-color"
+                    value="#0a0a0a"
+                    class="shadow-color-picker"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="shadow-color-group">
+              <label class="shadow-label">Shadow Colors</label>
+              <div class="shadow-color-inputs">
+                <div class="shadow-color-item">
+                  <span>Box Shadow</span>
+                  <input
+                    type="color"
+                    id="shadow-color"
+                    value="#000000"
+                    class="shadow-color-picker"
+                  />
+                </div>
+                <div class="shadow-color-item">
+                  <span>Text Shadow</span>
+                  <input
+                    type="color"
+                    id="ts-color"
+                    value="#000000"
+                    class="shadow-color-picker"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Box Shadow Controls -->
+          <div class="shadow-section">
+            <h3 class="section-title"><i class="fas fa-box"></i> Box Shadow</h3>
+            <div class="shadow-sliders">
+              <div class="slider-group">
+                <div class="slider-label">
+                  <span>X Offset</span><span id="x-val">15px</span>
+                </div>
+                <input
+                  type="range"
+                  id="x-shadow"
+                  min="-100"
+                  max="100"
+                  value="15"
+                  class="slider"
+                />
+              </div>
+              <div class="slider-group">
+                <div class="slider-label">
+                  <span>Y Offset</span><span id="y-val">15px</span>
+                </div>
+                <input
+                  type="range"
+                  id="y-shadow"
+                  min="-100"
+                  max="100"
+                  value="15"
+                  class="slider"
+                />
+              </div>
+              <div class="slider-group">
+                <div class="slider-label">
+                  <span>Blur</span><span id="blur-val">30px</span>
+                </div>
+                <input
+                  type="range"
+                  id="blur-shadow"
+                  min="0"
+                  max="150"
+                  value="30"
+                  class="slider"
+                />
+              </div>
+              <div class="slider-group">
+                <div class="slider-label">
+                  <span>Opacity</span><span id="opacity-val">0.4</span>
+                </div>
+                <input
+                  type="range"
+                  id="opacity-shadow"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.4"
+                  class="slider"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Text Shadow Controls -->
+          <div class="shadow-section">
+            <h3 class="section-title">
+              <i class="fas fa-font"></i> Text Shadow
+            </h3>
+            <div class="shadow-sliders">
+              <div class="slider-group">
+                <div class="slider-label">
+                  <span>Text X</span><span id="ts-x-val">0px</span>
+                </div>
+                <input
+                  type="range"
+                  id="ts-x"
+                  min="-50"
+                  max="50"
+                  value="0"
+                  class="slider"
+                />
+              </div>
+              <div class="slider-group">
+                <div class="slider-label">
+                  <span>Text Y</span><span id="ts-y-val">0px</span>
+                </div>
+                <input
+                  type="range"
+                  id="ts-y"
+                  min="-50"
+                  max="50"
+                  value="0"
+                  class="slider"
+                />
+              </div>
+              <div class="slider-group">
+                <div class="slider-label">
+                  <span>Text Blur</span><span id="ts-blur-val">5px</span>
+                </div>
+                <input
+                  type="range"
+                  id="ts-blur"
+                  min="0"
+                  max="50"
+                  value="5"
+                  class="slider"
+                />
+              </div>
+              <div class="slider-group">
+                <div class="slider-label">
+                  <span>Text Opacity</span><span id="ts-opacity-val">0.5</span>
+                </div>
+                <input
+                  type="range"
+                  id="ts-opacity"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.5"
+                  class="slider"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- CSS Output -->
+          <div class="shadow-output-section">
+            <label>CSS Code Preview</label>
+            <div class="css-preview-box" id="css-preview-line">
+              /* CSS Ready */
+            </div>
+            <button id="download-btn" class="copy-btn download-css-btn">
+              <i class="fas fa-download"></i> Download CSS
+            </button>
+          </div>
+        </div>
+      </div>
+      <pre id="css-code" style="display: none"></pre>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>© 2025 BarrTech Solutions. All rights reserved.</p>
+      <p>
+        Contact us at
+        <a href="mailto:BarrTechSolutions@gmail.com"
+          >BarrTechSolutions@gmail.com</a
+        >
+      </p>
+      <div class="social-links">
+        <a href="https://github.com/Evening-Star13" target="_blank"
+          ><i class="fa-brands fa-github"></i
+        ></a>
+        <a href="https://codepen.io/EveningStar-Christopher" target="_blank"
+          ><i class="fa-brands fa-codepen"></i
+        ></a>
+        <a href="https://www.instagram.com/" target="_blank"
+          ><i class="fa-brands fa-instagram"></i
+        ></a>
+      </div>
+    </footer>
+
+    <script src="project.js"></script>
+  </body>
+</html>
